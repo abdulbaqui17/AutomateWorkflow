@@ -12,11 +12,13 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
+    "@types/nodemailer": "^7.0.3",
     "nodemon": "^3.1.10",
     "typescript": "^5.9.2"
   },
   "dependencies": {
     "@pkg/core": "*",
-    "@pkg/kafka": "*"
+    "@pkg/kafka": "*",
+    "nodemailer": "^7.0.10"
   }
 }

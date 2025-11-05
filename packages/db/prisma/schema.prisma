@@ -139,7 +139,25 @@ model TelegramBot {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  triggers  Trigger[]
+  triggers         Trigger[]
+  collectedEmails  TelegramUserEmail[]
+}
+
+// Model to store emails collected from Telegram users
+model TelegramUserEmail {
+  id               String   @id @default(uuid())
+  telegramUserId   BigInt   @unique
+  telegramUsername String?
+  firstName        String?
+  lastName         String?
+  email            String
+  telegramBotId    String
+  telegramBot      TelegramBot @relation(fields: [telegramBotId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([email])
+  @@index([telegramBotId])
 }
 
 enum ZapRunStatus {

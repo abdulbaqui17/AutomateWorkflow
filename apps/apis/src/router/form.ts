@@ -194,6 +194,23 @@ router.post("/forms/:formId/submit", async (req, res) => {
   // @ts-ignore - generated Prisma types will include FormSubmission after migration
   const submission = await prisma.formSubmission.create({ data: { formId, data } });
 
+  // Transform field IDs to field labels for template variables
+  // e.g., { "field-123": "john@example.com" } → { "email": "john@example.com" }
+  const submissionData: any = {};
+  const fields = (form.fields || []) as any[];
+  
+  for (const field of fields) {
+    const fieldId = field.id;
+    const fieldLabel = field.label?.toLowerCase().replace(/\s+/g, '_') || fieldId; // Convert "Email Address" → "email_address"
+    if (data[fieldId] !== undefined) {
+      submissionData[fieldLabel] = data[fieldId];
+    }
+  }
+  
+  console.log('📝 Form submission data transformation:');
+  console.log('Raw data:', JSON.stringify(data, null, 2));
+  console.log('Transformed submission:', JSON.stringify(submissionData, null, 2));
+
   // If form is linked to a trigger, publish to Kafka to trigger the workflow
   if (form.trigger) {
     const zapId = form.trigger.zapId;
@@ -201,7 +218,19 @@ router.post("/forms/:formId/submit", async (req, res) => {
     await p.send({
       topic: ZAP_TRIGGER_TOPIC,
       messages: [
-        { key: zapId, value: JSON.stringify({ trigger: "form", zapId, payload: { formId, submissionId: submission.id, data } }) },
+        { 
+          key: zapId, 
+          value: JSON.stringify({ 
+            trigger: "form", 
+            zapId, 
+            payload: { 
+              formId, 
+              submissionId: submission.id, 
+              data, // Raw data with field IDs
+              submission: submissionData // Transformed data with field labels
+            } 
+          }) 
+        },
       ],
     });
     return res.json({ ok: true, submissionId: submission.id, workflowTriggered: true });

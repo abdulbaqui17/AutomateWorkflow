@@ -21,7 +21,11 @@ app.use("/api/v1", formRouter)
 app.use("/api/v1", telegramRouter)
 
 app.get("/test", (req, res) => {
-  res.json({ message: "Server is working" });
+  res.json({ 
+    message: "✅ HOT RELOAD IS WORKING PERFECTLY! 🔥🚀",
+    timestamp: new Date().toISOString(),
+    containerized: true
+  });
 });
 
 app.listen(3001, () => {

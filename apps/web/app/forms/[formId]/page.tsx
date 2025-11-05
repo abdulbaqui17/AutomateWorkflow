@@ -18,7 +18,8 @@ interface FormData {
 
 async function getFormData(formId: string): Promise<FormData | null> {
   try {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
+    // Use API_URL for server-side requests (Docker network), fallback to localhost
+    const apiBase = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
     const response = await fetch(`${apiBase}/api/v1/public/${formId}`, {
       cache: "no-store", // Always fetch fresh data
     });
@@ -37,15 +38,17 @@ async function getFormData(formId: string): Promise<FormData | null> {
 export default async function PublicFormPage({
   params,
 }: {
-  params: { formId: string };
+  params: Promise<{ formId: string }>;
 }) {
-  const formData = await getFormData(params.formId);
+  const { formId } = await params;
+  const formData = await getFormData(formId);
 
   if (!formData) {
     notFound();
   }
 
-  const submitUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001"}/api/v1/forms/${params.formId}/submit`;
+  // Use NEXT_PUBLIC_API_URL for client-side form submission (browser access)
+  const submitUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/v1/forms/${formId}/submit`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">

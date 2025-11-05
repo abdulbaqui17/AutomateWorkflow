@@ -122,7 +122,7 @@ export default function Home() {
               <h1 className="text-4xl font-semibold leading-tight sm:text-5xl md:text-6xl">
                 Flexible AI workflow automation
                 <span className="block text-[#FF6B2C] drop-shadow-[0_8px_35px_rgba(255,107,44,0.35)]">
-                  for technical teams
+                  for technical teams 🔥
                 </span>
               </h1>
 

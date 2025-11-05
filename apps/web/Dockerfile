@@ -1,23 +1,31 @@
-FROM node:20-alpine AS deps
+FROM node:20-alpine
 WORKDIR /app
+
+# Copy package files first for better caching
 COPY ../../package*.json ./
 COPY ../../turbo.json ./
+COPY ../../tsconfig.json ./
+COPY apps/web/package.json ./apps/web/package.json
+
+# Install dependencies with retries and better npm config
+RUN npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-retries 5 && \
+    npm install --legacy-peer-deps || npm install --legacy-peer-deps
+
+# Copy source code
 COPY ../../packages ./packages
-COPY ./package.json ./apps/web/package.json
-RUN npm ci --omit=dev
+COPY apps/web/next.config.js ./apps/web/next.config.js
+COPY apps/web/tsconfig.json ./apps/web/tsconfig.json
+COPY apps/web/eslint.config.js ./apps/web/eslint.config.js
+COPY apps/web/next-env.d.ts ./apps/web/next-env.d.ts
+COPY apps/web/app ./apps/web/app
+COPY apps/web/public ./apps/web/public
 
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY ../../ ./
-RUN corepack disable && npm ci && npx turbo run build
+# Build packages if needed
+RUN npx turbo run build --filter=@pkg/* || true
 
-FROM node:20-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app/apps/web/.next ./apps/web/.next
-COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
 EXPOSE 3000
-CMD ["npm","run","start","--workspace","web"]
+
+# Run in development mode for hot-reloading
+CMD ["npm", "run", "dev", "--workspace", "web"]
 

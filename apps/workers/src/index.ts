@@ -4,16 +4,17 @@ import { executeZapRun } from '../../../packages/core/src/executor.js';
 
 async function main() {
     const consumer = await createConsumer('main-worker');
-    await consumer.subscribe({ topic: Topics.ZapEvents, fromBeginning: true });
+    await consumer.subscribe({ topic: Topics.ZapRunRequested, fromBeginning: true });
     
     await consumer.run({
         autoCommit: false,
         eachMessage: async ({ topic, partition, message }) => {
             try {
-                const zapRunId = message.value?.toString();
+                const data = JSON.parse(message.value?.toString() || '{}');
+                const zapRunId = data.zapRunId;
                 
                 if (!zapRunId) {
-                    console.error('Received message with no value');
+                    console.error('Received message with no zapRunId');
                     return;
                 }
                 
@@ -25,7 +26,7 @@ async function main() {
                 
                 // Commit the offset to mark message as processed
                 await consumer.commitOffsets([{ 
-                    topic: Topics.ZapEvents,
+                    topic: Topics.ZapRunRequested,
                     partition: partition, 
                     offset: (Number(message.offset) + 1).toString() 
                 }]);

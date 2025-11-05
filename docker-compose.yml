@@ -54,9 +54,22 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      API_URL: http://apis:3001
     ports:
       - "3000:3000"
+    volumes:
+      # Mount source code for hot-reloading
+      - ./apps/web:/app/apps/web
+      - ./packages:/app/packages
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./turbo.json:/app/turbo.json
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/web/.next
     depends_on:
       - apis
 
@@ -68,12 +81,25 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/week2
       KAFKA_BROKERS: kafka:9092
       JWT_SECRET: b7e2c1a4e5d6f8c9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3
+      ENCRYPTION_KEY: qA6yo+C7hiqrc37TqyJSeYLD0Ylcq3x3954PobZ9Dr0=
       RESEND_EMAIL_KEY: re_ZvsEJWxT_39gM15qkQtcXGLnxewQ3yrf1
       RESEND_FROM: mohd.baqui13@gmail.com
       APP_BASE_URL: http://apis:3001
       FRONTEND_URL: http://web:3000
+      PUBLIC_WEBHOOK_URL: ${PUBLIC_WEBHOOK_URL:-http://localhost:3001}
     ports:
       - "3001:3001"
+    volumes:
+      # Mount source code for hot-reloading
+      - ./apps/apis/src:/app/apps/apis/src
+      - ./apps/apis/tsconfig.json:/app/apps/apis/tsconfig.json
+      - ./packages:/app/packages
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+      - /app/apps/apis/node_modules
+      - /app/apps/apis/dist
     depends_on:
       postgres:
         condition: service_started
@@ -90,6 +116,17 @@ services:
       JWT_SECRET: b7e2c1a4e5d6f8c9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3
       APP_BASE_URL: http://apis:3001
       FRONTEND_URL: http://web:3000
+    volumes:
+      # Mount source code for hot-reloading
+      - ./apps/processor/src:/app/apps/processor/src
+      - ./apps/processor/tsconfig.json:/app/apps/processor/tsconfig.json
+      - ./packages:/app/packages
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+      - /app/apps/processor/node_modules
+      - /app/apps/processor/dist
     depends_on:
       postgres:
         condition: service_started
@@ -104,8 +141,23 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/week2
       KAFKA_BROKERS: kafka:9092
       JWT_SECRET: b7e2c1a4e5d6f8c9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3
+      RESEND_EMAIL_KEY: re_ZvsEJWxT_39gM15qkQtcXGLnxewQ3yrf1
+      RESEND_FROM: mohd.baqui13@gmail.com
+      GMAIL_USER: mohd.baqui13@gmail.com
+      GMAIL_APP_PASSWORD: qxuxojgtyostbiyo
       APP_BASE_URL: http://apis:3001
       FRONTEND_URL: http://web:3000
+    volumes:
+      # Mount source code for hot-reloading
+      - ./apps/workers/src:/app/apps/workers/src
+      - ./apps/workers/tsconfig.json:/app/apps/workers/tsconfig.json
+      - ./packages:/app/packages
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+      - /app/apps/workers/node_modules
+      - /app/apps/workers/dist
     depends_on:
       postgres:
         condition: service_started

@@ -100,6 +100,35 @@ export default function DashboardPage() {
     router.replace("/signin");
   };
 
+  const handleDeleteWorkflow = async (zapId: string, zapName: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent row click navigation
+    
+    if (!confirm(`Are you sure you want to delete "${zapName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/api/v1/zap/${zapId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: token || "",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete workflow");
+      }
+
+      // Remove the workflow from the list
+      setZaps((prevZaps) => prevZaps?.filter((zap) => zap.id !== zapId) || null);
+      alert(`Workflow "${zapName}" deleted successfully`);
+    } catch (error) {
+      console.error("Error deleting workflow:", error);
+      alert("Failed to delete workflow. Please try again.");
+    }
+  };
+
   const renderZapsTable = () => {
     if (isLoading && !zaps) {
       return (
@@ -149,29 +178,51 @@ export default function DashboardPage() {
             <th className="px-4 py-3 font-semibold">Name</th>
             <th className="px-4 py-3 font-semibold">Trigger</th>
             <th className="px-4 py-3 font-semibold">Actions</th>
-            <th className="px-4 py-3 text-right font-semibold">Open</th>
+            <th className="px-4 py-3 text-right font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-white/10">
           {zaps.map((zap, index) => (
             <tr
               key={zap.id}
-              onClick={() => router.push(`/workflows/${zap.id}`)}
-              className={`cursor-pointer transition hover:bg-white/5 ${index % 2 === 0 ? "bg-white/0" : "bg-white/[0.02]"}`}
+              className={`transition hover:bg-white/5 ${index % 2 === 0 ? "bg-white/0" : "bg-white/[0.02]"}`}
             >
-              <td className="px-4 py-3 font-medium text-white/90">{zap.name}</td>
-              <td className="px-4 py-3 text-white/70">{zap.trigger?.type?.name ?? "—"}</td>
-              <td className="px-4 py-3 text-white/70">
+              <td 
+                className="px-4 py-3 font-medium text-white/90 cursor-pointer"
+                onClick={() => router.push(`/workflows/${zap.id}`)}
+              >
+                {zap.name}
+              </td>
+              <td 
+                className="px-4 py-3 text-white/70 cursor-pointer"
+                onClick={() => router.push(`/workflows/${zap.id}`)}
+              >
+                {zap.trigger?.type?.name ?? "—"}
+              </td>
+              <td 
+                className="px-4 py-3 text-white/70 cursor-pointer"
+                onClick={() => router.push(`/workflows/${zap.id}`)}
+              >
                 {zap.actions?.length ? zap.actions.map((action) => action.name).join(", ") : "—"}
               </td>
               <td className="px-4 py-3 text-right">
-                <Link
-                  href={`/workflows/${zap.id}`}
-                  className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition hover:scale-[1.02]"
-                  style={{ backgroundImage: "linear-gradient(120deg,#7C3AED 0%,#FF6B2C 50%,#FACC15 100%)" }}
-                >
-                  Open
-                </Link>
+                <div className="flex items-center justify-end gap-2">
+                  <Link
+                    href={`/workflows/${zap.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition hover:scale-[1.02]"
+                    style={{ backgroundImage: "linear-gradient(120deg,#7C3AED 0%,#FF6B2C 50%,#FACC15 100%)" }}
+                  >
+                    Open
+                  </Link>
+                  <button
+                    onClick={(e) => handleDeleteWorkflow(zap.id, zap.name, e)}
+                    className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 transition hover:scale-[1.02]"
+                    title="Delete workflow"
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

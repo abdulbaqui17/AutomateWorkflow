@@ -219,7 +219,11 @@ function OnFormSubmissionTrigger({
         });
       }
 
-      if (!response.ok) throw new Error("Failed to save form");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        const errorMessage = errorData.error || errorData.message || `Server error: ${response.status}`;
+        throw new Error(errorMessage);
+      }
       
       const data = await response.json();
       setFormId(data.id);
@@ -237,9 +241,10 @@ function OnFormSubmissionTrigger({
 
       alert("Form saved successfully!");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save form");
+      const errorMessage = err instanceof Error ? err.message : "Failed to save form";
+      setError(errorMessage);
       console.error("Error saving form:", err);
-      alert("Failed to save form. Please try again.");
+      alert(`Failed to save form: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }
@@ -444,6 +449,340 @@ function OnFormSubmissionTrigger({
         >
           + Add Form Element
         </button>
+      </div>
+    </div>
+  );
+}
+
+// Telegram Bot Trigger Configuration Component
+function TelegramBotTriggerConfig({
+  config,
+  onConfigChange,
+}: {
+  config: any;
+  onConfigChange: (config: any) => void;
+}) {
+  const [botName, setBotName] = useState(config?.botName || "");
+  const [botToken, setBotToken] = useState(config?.botToken || "");
+  const [botId, setBotId] = useState<string | null>(config?.botId || null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [webhookUrl, setWebhookUrl] = useState<string | null>(config?.webhookUrl || null);
+
+  const saveBotConfig = async () => {
+    if (!botName.trim()) {
+      setError("Bot name is required");
+      return;
+    }
+    if (!botToken.trim()) {
+      setError("Bot token is required");
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/api/v1/telegram/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token || "",
+        },
+        body: JSON.stringify({
+          name: botName,
+          token: botToken,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        const errorMessage = errorData.error || errorData.message || `Server error: ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      setBotId(data.id);
+
+      // Webhook URL from backend response (automatically configured)
+      const webhook = data.webhookUrl || `${API_BASE}/api/v1/telegram/webhook/${data.id}`;
+      setWebhookUrl(webhook);
+
+      // Update config
+      const updatedConfig = {
+        botName,
+        botToken, // Note: Backend stores this encrypted
+        botId: data.id,
+        webhookUrl: webhook,
+        baseUrl: "https://api.telegram.org",
+        webhookStatus: data.webhookStatus,
+      };
+      onConfigChange(updatedConfig);
+
+      // Show appropriate message based on webhook setup status
+      if (data.webhookStatus === "success") {
+        alert("✅ Bot registered successfully!\n🔗 Webhook configured automatically!\n\nYour bot is ready to receive messages.");
+      } else if (data.webhookStatus === "failed") {
+        alert(`⚠️ Bot registered but webhook setup failed:\n${data.webhookError}\n\nYou may need to set it manually or configure PUBLIC_WEBHOOK_URL environment variable.`);
+      } else {
+        alert("Bot registered successfully!");
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to register bot";
+      setError(errorMessage);
+      console.error("Error registering bot:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const copyWebhookUrl = () => {
+    if (webhookUrl) {
+      navigator.clipboard.writeText(webhookUrl);
+      alert("Webhook URL copied to clipboard!");
+    }
+  };
+
+  return (
+    <div className="h-full overflow-y-auto">
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
+        <h2 className="text-lg font-semibold text-white">Telegram Bot Trigger</h2>
+        <button
+          onClick={saveBotConfig}
+          disabled={isSaving || !botName.trim() || !botToken.trim()}
+          className="rounded-md bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSaving ? "Saving..." : botId ? "Update Bot" : "Register Bot"}
+        </button>
+      </div>
+
+      {error && (
+        <div className="mb-4 rounded-md bg-red-500/10 border border-red-500/20 px-3 py-2 text-xs text-red-400">
+          {error}
+        </div>
+      )}
+
+      {botId && (
+        <div className="mb-4 rounded-md bg-green-500/10 border border-green-500/20 px-3 py-2 text-xs text-green-400">
+          Bot registered successfully! ID: {botId}
+        </div>
+      )}
+
+      {/* Bot Name */}
+      <div className="mb-6">
+        <label className="mb-2 block text-xs font-medium text-white/70">
+          Bot Name <span className="text-red-400">*</span>
+        </label>
+        <input
+          type="text"
+          value={botName}
+          onChange={(e) => setBotName(e.target.value)}
+          placeholder="e.g. My Workflow Bot"
+          className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/40 focus:border-purple-500 focus:outline-none"
+        />
+        <p className="mt-1 text-xs text-white/50">A friendly name to identify your bot</p>
+      </div>
+
+      {/* Bot Token */}
+      <div className="mb-6">
+        <label className="mb-2 block text-xs font-medium text-white/70">
+          Bot Token <span className="text-red-400">*</span>
+        </label>
+        <input
+          type="password"
+          value={botToken}
+          onChange={(e) => setBotToken(e.target.value)}
+          placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+          className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/40 focus:border-purple-500 focus:outline-none font-mono"
+        />
+        <p className="mt-1 text-xs text-white/50">
+          Get this from{" "}
+          <a
+            href="https://t.me/BotFather"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-purple-400 hover:text-purple-300 underline"
+          >
+            @BotFather
+          </a>{" "}
+          on Telegram
+        </p>
+      </div>
+
+      {/* Base URL Info */}
+      <div className="mb-6">
+        <label className="mb-2 block text-xs font-medium text-white/70">Base URL</label>
+        <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/60">
+          https://api.telegram.org
+        </div>
+        <p className="mt-1 text-xs text-white/50">Default Telegram API base URL</p>
+      </div>
+
+      {/* Webhook URL (shown after registration) */}
+      {webhookUrl && (
+        <div className="mb-6">
+          <label className="mb-2 block text-xs font-medium text-white/70">Webhook URL</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={webhookUrl}
+              readOnly
+              className="flex-1 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60 font-mono"
+            />
+            <button
+              onClick={copyWebhookUrl}
+              className="rounded-md bg-white/10 px-3 py-2 text-xs text-white hover:bg-white/20 transition"
+            >
+              Copy
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-white/50">
+            Set this webhook URL on Telegram using:{" "}
+            <code className="text-purple-400">
+              curl -X POST https://api.telegram.org/bot{"{YOUR_BOT_TOKEN}"}/setWebhook -d
+              url="{webhookUrl}"
+            </code>
+          </p>
+        </div>
+      )}
+
+      {/* Instructions */}
+      <div className="rounded-md border border-blue-500/20 bg-blue-500/10 px-4 py-3">
+        <h3 className="mb-2 text-sm font-semibold text-blue-300">Setup Instructions:</h3>
+        <ol className="space-y-2 text-xs text-blue-200/80">
+          <li>1. Open Telegram and search for @BotFather</li>
+          <li>2. Send /newbot command and follow the instructions</li>
+          <li>3. Copy the bot token provided by BotFather</li>
+          <li>4. Paste the token above and save</li>
+          <li>5. Copy the webhook URL and set it using the curl command shown</li>
+          <li>6. Your bot is ready to trigger workflows!</li>
+        </ol>
+      </div>
+    </div>
+  );
+}
+
+// Send Email Action Configuration Component
+function SendEmailActionConfig({ config, onConfigChange }: { config: any; onConfigChange: (config: any) => void }) {
+  const [to, setTo] = useState<string>(config?.to || "");
+  const [subject, setSubject] = useState<string>(config?.subject || "");
+  const [body, setBody] = useState<string>(config?.body || "");
+
+  return (
+    <div className="space-y-4">
+      <h2 className="mb-4 text-xl font-bold text-white">Send Email Configuration</h2>
+
+      {/* Available Variables Helper */}
+      <div className="rounded-md border border-purple-500/20 bg-purple-500/10 px-4 py-3">
+        <h3 className="mb-2 text-sm font-semibold text-purple-300">💡 Available Variables</h3>
+        <div className="space-y-1 text-xs text-purple-200/80">
+          <div><code className="bg-purple-900/30 px-1 py-0.5 rounded">{'{{submission.email}}'}</code> - Form email field</div>
+          <div><code className="bg-purple-900/30 px-1 py-0.5 rounded">{'{{submission.name}}'}</code> - Form name field</div>
+          <div><code className="bg-purple-900/30 px-1 py-0.5 rounded">{'{{trigger.email}}'}</code> - Telegram user email</div>
+          <div><code className="bg-purple-900/30 px-1 py-0.5 rounded">{'{{trigger.firstName}}'}</code> - Telegram first name</div>
+          <div><code className="bg-purple-900/30 px-1 py-0.5 rounded">{'{{trigger.telegramUserId}}'}</code> - Telegram user ID</div>
+        </div>
+        <p className="mt-2 text-xs text-purple-300">Use these placeholders in any field below - they'll be replaced with actual data!</p>
+      </div>
+
+      {/* To Email */}
+      <div>
+        <label className="mb-1 block text-sm font-medium text-white/80">
+          To Email Address <span className="text-red-400">*</span>
+        </label>
+        <input
+          type="text"
+          placeholder="{{submission.email}} or user@example.com"
+          value={to}
+          onChange={(e) => {
+            setTo(e.target.value);
+            onConfigChange({ to: e.target.value, subject, body });
+          }}
+          className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/40 focus:border-purple-500 focus:outline-none font-mono"
+        />
+        <p className="mt-1 text-xs text-white/50">
+          Use <code className="text-purple-400">{'{{submission.email}}'}</code> for dynamic recipient
+        </p>
+      </div>
+
+      {/* Subject */}
+      <div>
+        <label className="mb-1 block text-sm font-medium text-white/80">
+          Email Subject <span className="text-red-400">*</span>
+        </label>
+        <input
+          type="text"
+          placeholder="Welcome {{submission.name}}!"
+          value={subject}
+          onChange={(e) => {
+            setSubject(e.target.value);
+            onConfigChange({ to, subject: e.target.value, body });
+          }}
+          className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/40 focus:border-purple-500 focus:outline-none font-mono"
+        />
+        <p className="mt-1 text-xs text-white/50">
+          You can use variables like <code className="text-purple-400">{'{{submission.name}}'}</code>
+        </p>
+      </div>
+
+      {/* Body */}
+      <div>
+        <label className="mb-1 block text-sm font-medium text-white/80">
+          Email Body <span className="text-red-400">*</span>
+        </label>
+        <textarea
+          placeholder="<h1>Hello {{submission.name}}!</h1><p>Thanks for submitting the form.</p>"
+          value={body}
+          onChange={(e) => {
+            setBody(e.target.value);
+            onConfigChange({ to, subject, body: e.target.value });
+          }}
+          rows={10}
+          className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/40 focus:border-purple-500 focus:outline-none font-mono"
+        />
+        <p className="mt-1 text-xs text-white/50">
+          HTML supported. Use variables like <code className="text-purple-400">{'{{submission.email}}'}</code>
+        </p>
+      </div>
+
+      {/* Configuration Summary */}
+      {to && subject && body && (
+        <div className="rounded-md border border-green-500/20 bg-green-500/10 px-4 py-3">
+          <h3 className="mb-2 text-sm font-semibold text-green-300">✓ Configuration Complete</h3>
+          <div className="space-y-1 text-xs text-green-200/80">
+            <div><span className="font-semibold">To:</span> {to}</div>
+            <div><span className="font-semibold">Subject:</span> {subject}</div>
+            <div><span className="font-semibold">Body:</span> {body.length} characters</div>
+          </div>
+        </div>
+      )}
+
+      {/* Example */}
+      <div className="rounded-md border border-green-500/20 bg-green-500/10 px-4 py-3">
+        <h3 className="mb-2 text-sm font-semibold text-green-300">✨ Example Configuration</h3>
+        <div className="space-y-2 text-xs text-green-200/80 font-mono">
+          <div><span className="text-green-400">To:</span> {'{{submission.email}}'}</div>
+          <div><span className="text-green-400">Subject:</span> Thanks {'{{submission.name}}'}!</div>
+          <div><span className="text-green-400">Body:</span></div>
+          <pre className="mt-1 bg-green-900/20 p-2 rounded text-[10px] overflow-x-auto">
+{`<h1>Hello {{submission.name}}!</h1>
+<p>Thank you for submitting the form.</p>
+<p>We received your email: {{submission.email}}</p>`}
+          </pre>
+        </div>
+      </div>
+
+      {/* Instructions */}
+      <div className="rounded-md border border-blue-500/20 bg-blue-500/10 px-4 py-3">
+        <h3 className="mb-2 text-sm font-semibold text-blue-300">💡 Tips:</h3>
+        <ul className="space-y-2 text-xs text-blue-200/80">
+          <li>• Use <code className="bg-blue-900/30 px-1 rounded">{'{{variable}}'}</code> for dynamic data from triggers</li>
+          <li>• HTML is supported in the email body</li>
+          <li>• Use &lt;h1&gt;, &lt;p&gt;, &lt;strong&gt; tags for formatting</li>
+          <li>• Test with your own email first: <code className="bg-blue-900/30 px-1 rounded">youremail@example.com</code></li>
+        </ul>
       </div>
     </div>
   );
@@ -686,7 +1025,9 @@ export default function WorkflowBuilderPage() {
                 <h3 className="px-4 py-3 text-xs uppercase tracking-wide text-white/60">Triggers</h3>
                 <div className="space-y-2">
                   {Array.isArray(availableTriggers) &&
-                    (availableTriggers as any[]).map((trigger: any) => (
+                    (availableTriggers as any[])
+                      .filter((trigger: any) => trigger.name !== "Webhook Trigger")
+                      .map((trigger: any) => (
                       <div
                         key={trigger.id}
                         draggable
@@ -761,6 +1102,32 @@ export default function WorkflowBuilderPage() {
               <OnFormSubmissionTrigger
                 config={meta[selectedNodeId]?.config || {}}
                 zapId={savedZapId}
+                onConfigChange={(newConfig) => {
+                  setMeta((prev: any) => ({
+                    ...prev,
+                    [selectedNodeId]: {
+                      ...prev[selectedNodeId],
+                      config: newConfig
+                    }
+                  }));
+                }}
+              />
+            ) : meta[selectedNodeId]?.name === "Telegram Bot Trigger" ? (
+              <TelegramBotTriggerConfig
+                config={meta[selectedNodeId]?.config || {}}
+                onConfigChange={(newConfig) => {
+                  setMeta((prev: any) => ({
+                    ...prev,
+                    [selectedNodeId]: {
+                      ...prev[selectedNodeId],
+                      config: newConfig
+                    }
+                  }));
+                }}
+              />
+            ) : meta[selectedNodeId]?.name === "send_email" || meta[selectedNodeId]?.name === "send_email_nodemailer" ? (
+              <SendEmailActionConfig
+                config={meta[selectedNodeId]?.config || {}}
                 onConfigChange={(newConfig) => {
                   setMeta((prev: any) => ({
                     ...prev,

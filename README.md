@@ -1,135 +1,290 @@
-# Turborepo starter
+# 🚀 Workflow Automation Platform
 
-This Turborepo starter is maintained by the Turborepo core team.
+Full-stack microservices platform for creating automated workflows with triggers and actions. Built with TypeScript, Next.js, Kafka, and Docker.
 
-## Using this example
+## 🛠️ Tech Stack
 
-Run the following command:
+**Frontend:** Next.js 15 • React 19 • TypeScript 5 • CSS Modules  
+**Backend:** Node.js 20 • Express.js • TypeScript • Prisma 6 ORM  
+**Database:** PostgreSQL 16  
+**Message Queue:** Apache Kafka 7.6 • KafkaJS 2.2 • Zookeeper  
+**DevOps:** Docker • Docker Compose • npm Workspaces  
+**Email:** Resend API • Nodemailer (Gmail SMTP)  
+**Integrations:** Telegram Bot API
 
-```sh
-npx create-turbo@latest
-```
+---
 
-## What's inside?
+## ✨ Features
 
-This Turborepo includes the following packages/apps:
+**Workflow Automation**
+- Visual workflow builder with drag-and-drop
+- Form triggers, Telegram bot triggers, webhook triggers
+- Email actions with HTML templates
+- Template variables: `{{submission.email}}`, `{{trigger.name}}`
+- Multi-step execution with data passing
 
-### Apps and Packages
+**Dynamic Form Builder**
+- Custom forms with various field types
+- Public form URLs for submissions
+- Auto-trigger workflows on submission
+- Form data mapping to workflow variables
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+**Email System**
+- Resend API integration
+- Nodemailer with Gmail SMTP (send to any email)
+- HTML email support
+- Dynamic variable replacement
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+**Telegram Integration**
+- Create and manage bots
+- Message triggers for workflows
+- User email mapping
+- Automated responses
 
-### Utilities
+**Event-Driven Architecture**
+- Apache Kafka for reliable message processing
+- Async workflow execution
+- Scalable worker pool
+- Fault-tolerant design
 
-This Turborepo has some additional tools already setup for you:
+---
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
+## 🏗️ Architecture
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+Next.js Frontend (3000)
+         ↓
+   APIs Service (3001) ← REST API
+         ↓
+    Apache Kafka ← Event Bus
+    ↓         ↓
+Processor   Workers ← Consumers
+    ↓         ↓
+PostgreSQL (5432) ← Prisma ORM
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+**Microservices:**
+- **web**: Next.js frontend
+- **apis**: REST API endpoints
+- **processor**: Creates workflow runs
+- **workers**: Executes actions (scalable)
+- **postgres**: Database
+- **kafka + zookeeper**: Message queue
 
+**Message Flow:**
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+Form Submit → APIs → Kafka (zap.trigger) → Processor → 
+Kafka (zap.run.requested) → Workers → Execute Actions → Complete
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+---
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 20+
+- Docker & Docker Compose
+- Git
+
+### Installation
+
+```bash
+# Clone repository
+git clone https://github.com/abdulbaqui17/week2.git
+cd week2
+
+# Install dependencies
+npm install
+
+# Start all services with Docker
+docker compose up -d
+
+# Run database migrations
+cd packages/db
+npx prisma migrate dev
+```
+
+### Access
+
+- **Frontend**: http://localhost:3000
+- **API**: http://localhost:3001
+- **Database**: localhost:5432
+
+---
+
+## 📦 Project Structure
 
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+week2/
+├── apps/
+│   ├── apis/          # REST API service (Express)
+│   ├── processor/     # Kafka consumer (creates workflow runs)
+│   ├── workers/       # Action executor (scalable)
+│   └── web/           # Next.js frontend
+├── packages/
+│   ├── core/          # Business logic (executor, actions)
+│   ├── db/            # Prisma schema & migrations
+│   ├── kafka/         # Kafka client & topics
+│   └── ui/            # Shared React components
+├── docker-compose.yml
+└── package.json
 ```
 
-## Useful Links
+---
 
-Learn more about the power of Turborepo:
+## 🔑 Environment Variables
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+Create `.env` file (or use docker-compose.yml defaults):
+
+```env
+# Database
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/week2"
+
+# Email (Resend)
+RESEND_EMAIL_KEY="your_resend_api_key"
+RESEND_FROM="onboarding@resend.dev"
+
+# Email (Gmail SMTP via Nodemailer)
+GMAIL_USER="your_email@gmail.com"
+GMAIL_APP_PASSWORD="your_app_password"
+
+# Kafka
+KAFKA_BROKERS="kafka:9092"
+
+# JWT
+JWT_SECRET="your_secret_key"
+```
+
+---
+
+## 💡 Key Concepts
+
+### Template Variables
+Dynamic data injection using `{{variable}}` syntax:
+
+```typescript
+// Config
+{
+  to: "{{submission.email}}",
+  subject: "Welcome {{submission.name}}!",
+  body: "<h1>Hi {{submission.name}}!</h1>"
+}
+
+// Runtime data
+{ submission: { email: "user@example.com", name: "John" } }
+
+// Result
+{
+  to: "user@example.com",
+  subject: "Welcome John!",
+  body: "<h1>Hi John!</h1>"
+}
+```
+
+### Workflow Execution
+1. User creates workflow (trigger + actions)
+2. Trigger event occurs (form submit, telegram message)
+3. APIs service publishes to Kafka
+4. Processor creates ZapRun record
+5. Workers consume and execute actions
+6. Results logged to database
+
+---
+
+## 📊 Database Schema
+
+**Core Tables:**
+- `User` - User accounts
+- `Zap` - Workflow definitions
+- `Trigger` - Workflow triggers (form, telegram, webhook)
+- `Action` - Workflow actions (email, http)
+- `ZapRun` - Execution records
+- `Form` - Custom forms
+- `FormSubmission` - Form data
+- `TelegramBot` - Bot configurations
+- `AvailableTrigger` - Trigger types
+- `AvailableAction` - Action types
+
+---
+
+## 🧪 Usage Example
+
+### Create Email Workflow
+
+1. **Create Form** at `/workflows/new`
+2. **Add Form Trigger**
+3. **Add Email Action** with config:
+   ```json
+   {
+     "to": "{{submission.email}}",
+     "subject": "Thanks for submitting!",
+     "body": "<h1>Hello {{submission.name}}!</h1>"
+   }
+   ```
+4. **Save Workflow**
+5. **Submit Form** - email sent automatically!
+
+### Check Logs
+```bash
+docker compose logs -f workers
+```
+
+---
+
+## 👨‍💻 Skills Demonstrated
+
+✅ **Full-Stack Development** - Next.js, React, Node.js, TypeScript  
+✅ **Microservices Architecture** - Event-driven, loosely coupled services  
+✅ **Message Queues** - Apache Kafka for async processing  
+✅ **Database Design** - PostgreSQL with Prisma ORM  
+✅ **Docker** - Multi-container orchestration  
+✅ **API Development** - RESTful endpoints, auth, validation  
+✅ **Real-Time Processing** - Event streaming, workers  
+✅ **Third-Party Integration** - Email APIs, Telegram bots  
+✅ **Monorepo** - npm workspaces, shared packages  
+✅ **Production Patterns** - Error handling, logging, scalability
+
+---
+
+## 📈 Complexity Metrics
+
+- **7 Services** (web, apis, processor, workers, postgres, kafka, zookeeper)
+- **15+ Technologies** integrated
+- **Microservices + Event-Driven** architecture
+- **10+ Database Tables** with relations
+- **3 Kafka Topics** for async communication
+- **Multiple Triggers & Actions** supported
+- **Template Engine** for dynamic variables
+- **Scalable Worker Pool** for parallel execution
+
+---
+
+## 🎯 Suitable For
+
+**Senior Full-Stack Developer** • **Backend Engineer** • **Solutions Architect**  
+**Microservices Developer** • **Integration Engineer** • **DevOps Engineer**
+
+**Estimated Level:** Senior Developer ($100k-$150k+)
+
+---
+
+## 📞 Contact
+
+**GitHub**: [@abdulbaqui17](https://github.com/abdulbaqui17)  
+**Repository**: [github.com/abdulbaqui17/week2](https://github.com/abdulbaqui17/week2)
+
+---
+
+## 📄 License
+
+MIT License - Open source and free to use.
+
+---
+
+<div align="center">
+
+**⭐ Star this repository if you find it impressive!**
+
+Made with ❤️ by Abdul Baqui
+
+</div>
