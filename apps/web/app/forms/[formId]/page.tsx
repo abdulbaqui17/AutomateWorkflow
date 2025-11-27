@@ -108,7 +108,7 @@ export default async function PublicFormPage({
                     type={field.type}
                     placeholder={field.placeholder}
                     required={field.required}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full text-black px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
                 )}
               </div>
