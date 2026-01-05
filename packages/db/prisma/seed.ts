@@ -1,4 +1,12 @@
 import { PrismaClient } from '../generated/prisma/index.js';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+// Load environment variables from root .env
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path: resolve(__dirname, '../../../.env') });
 
 const prisma = new PrismaClient();
 
@@ -27,12 +35,22 @@ async function main() {
     create: { name: 'Telegram Bot Trigger' },
   });
 
-  // removed http_request from seeds - 30 September 2025
-  // removed send_email from seeds - 5 January 2026
+  // Seed AvailableActions
+  console.log('Seeding available actions...');
+  
+  const sendEmailNodemailerAction = await prisma.availableAction.upsert({
+    where: { name: 'send_email_nodemailer' },
+    update: {},
+    create: {
+      name: 'send_email_nodemailer',
+      description: 'Send email using Gmail SMTP via Nodemailer',
+    },
+  });
 
   console.log('Created trigger:', webhookTrigger);
   console.log('Created trigger:', formTrigger);
   console.log('Created trigger:', telegramTrigger);
+  console.log('Created action:', sendEmailNodemailerAction);
 }
 
 main()
