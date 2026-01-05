@@ -3,7 +3,9 @@ WORKDIR /app
 
 # Accept build arguments
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_FRONTEND_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_FRONTEND_URL=$NEXT_PUBLIC_FRONTEND_URL
 
 # Copy package files first for better caching
 COPY package*.json ./
