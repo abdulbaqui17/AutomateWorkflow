@@ -22,6 +22,15 @@ const getApiUrl = () => {
   return "http://localhost:3001";
 };
 
+// Helper function to get Frontend URL at runtime
+const getFrontendUrl = () => {
+  if (typeof window !== 'undefined') {
+    // Client-side: use env var or fallback
+    return process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
+  }
+  return "http://localhost:3000";
+};
+
 // Define nodeTypes outside component to prevent React Flow warning
 const nodeTypes = {};
 
@@ -153,7 +162,7 @@ function OnFormSubmissionTrigger({
     : `${getApiUrl()}/api/v1/forms/new/submit`;
   
   const publicFormUrl = formId 
-    ? `http://localhost:3000/forms/${formId}`
+    ? `${getFrontendUrl()}/forms/${formId}`
     : null;
 
   // Load existing form data if formId exists
