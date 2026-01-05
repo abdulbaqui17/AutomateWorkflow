@@ -13,7 +13,14 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+// Helper function to get API URL at runtime (not build time)
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    // Client-side: use env var or fallback
+    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  }
+  return "http://localhost:3001";
+};
 
 // Define nodeTypes outside component to prevent React Flow warning
 const nodeTypes = {};
@@ -142,8 +149,8 @@ function OnFormSubmissionTrigger({
   const [error, setError] = useState<string | null>(null);
 
   const formUrl = formId 
-    ? `${API_BASE}/api/v1/forms/${formId}/submit`
-    : `${API_BASE}/api/v1/forms/new/submit`;
+    ? `${getApiUrl()}/api/v1/forms/${formId}/submit`
+    : `${getApiUrl()}/api/v1/forms/new/submit`;
   
   const publicFormUrl = formId 
     ? `http://localhost:3000/forms/${formId}`
@@ -164,7 +171,7 @@ function OnFormSubmissionTrigger({
     
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/api/v1/forms/${formId}`, {
+      const response = await fetch(`${getApiUrl()}/api/v1/forms/${formId}`, {
         headers: { Authorization: token || "" }
       });
 
@@ -199,7 +206,7 @@ function OnFormSubmissionTrigger({
       let response;
       if (formId) {
         // Update existing form
-        response = await fetch(`${API_BASE}/api/v1/forms/${formId}`, {
+        response = await fetch(`${getApiUrl()}/api/v1/forms/${formId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -209,7 +216,7 @@ function OnFormSubmissionTrigger({
         });
       } else {
         // Create new form
-        response = await fetch(`${API_BASE}/api/v1/forms`, {
+        response = await fetch(`${getApiUrl()}/api/v1/forms`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -236,7 +243,7 @@ function OnFormSubmissionTrigger({
         formElements, 
         formId: data.id,
         published: data.published || false,
-        formUrl: `${API_BASE}/api/v1/forms/${data.id}/submit`
+        formUrl: `${getApiUrl()}/api/v1/forms/${data.id}/submit`
       });
 
       alert("Form saved successfully!");
@@ -484,7 +491,7 @@ function TelegramBotTriggerConfig({
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/api/v1/telegram/register`, {
+      const response = await fetch(`${getApiUrl()}/api/v1/telegram/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -506,7 +513,7 @@ function TelegramBotTriggerConfig({
       setBotId(data.id);
 
       // Webhook URL from backend response (automatically configured)
-      const webhook = data.webhookUrl || `${API_BASE}/api/v1/telegram/webhook/${data.id}`;
+      const webhook = data.webhookUrl || `${getApiUrl()}/api/v1/telegram/webhook/${data.id}`;
       setWebhookUrl(webhook);
 
       // Update config
@@ -805,8 +812,33 @@ export default function WorkflowBuilderPage() {
   const [runMetaData, setRunMetaData] = useState<string>("{}");
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/v1/available-triggers`).then((res) => res.json()).then(setAvailableTriggers);
-    fetch(`${API_BASE}/api/v1/available-actions`).then((res) => res.json()).then(setAvailableActions);
+    // Must be evaluated at runtime in browser, not at build time
+    const apiUrl = getApiUrl();
+    
+    console.log('Fetching triggers and actions from:', apiUrl);
+    console.log('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+    
+    fetch(`${apiUrl}/api/v1/available-triggers`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        console.log('Triggers loaded:', data);
+        setAvailableTriggers(data);
+      })
+      .catch((err) => console.error('Failed to load triggers:', err));
+    
+    fetch(`${apiUrl}/api/v1/available-actions`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        console.log('Actions loaded:', data);
+        setAvailableActions(data);
+      })
+      .catch((err) => console.error('Failed to load actions:', err));
   }, []);
 
   useEffect(() => {
@@ -871,7 +903,7 @@ export default function WorkflowBuilderPage() {
     setIsSaving(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/api/v1/zap`, {
+      const response = await fetch(`${getApiUrl()}/api/v1/zap`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: token || "" },
         body: JSON.stringify(payload),
@@ -904,7 +936,7 @@ export default function WorkflowBuilderPage() {
     setShowRunModal(false);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/api/v1/zap/${savedZapId}/run`, {
+      const response = await fetch(`${getApiUrl()}/api/v1/zap/${savedZapId}/run`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: token || "" },
         body: JSON.stringify({ metaData }),
