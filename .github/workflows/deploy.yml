@@ -1,0 +1,47 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to EC2
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} << 'ENDSSH'
+            cd ~/app
+            git pull origin main
+            ./deploy.sh
+          ENDSSH
+          
+          rm -f private_key.pem
+      
+      - name: Notify on Success
+        if: success()
+        run: echo "Deployment successful!"
+      
+      - name: Notify on Failure
+        if: failure()
+        run: echo "Deployment failed!"
+
+# To use this workflow:
+# 1. Go to your GitHub repository Settings -> Secrets and variables -> Actions
+# 2. Add these secrets:
+#    - EC2_SSH_PRIVATE_KEY: Your EC2 private key content
+#    - EC2_HOST: Your EC2 public IP or domain
+#    - EC2_USER: ubuntu (or your EC2 username)

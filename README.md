@@ -22,7 +22,28 @@ Next.js (3000) → APIs (3001) → Kafka → Processor → Workers → PostgreSQ
 
 **7 Services:** web • apis • processor • workers • postgres • kafka • zookeeper
 
-## 🚀 Quick Start
+## 🌐 Deploy to EC2
+
+**Simple 3-step deployment:**
+
+```bash
+# 1. SSH into EC2
+ssh -i your-key.pem ubuntu@YOUR_EC2_IP
+cd ~/app
+
+# 2. Configure environment
+nano .env.production
+
+# 3. Deploy (builds & deploys automatically!)
+./deploy.sh
+```
+
+📚 **First time?** See [QUICKSTART.md](QUICKSTART.md) for initial setup  
+📖 **Full guide:** [DEPLOYMENT.md](DEPLOYMENT.md)
+
+---
+
+## 🚀 Local Development Quick Start
 
 ```bash
 git clone https://github.com/abdulbaqui17/week2.git
