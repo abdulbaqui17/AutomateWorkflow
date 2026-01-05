@@ -2,13 +2,13 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy root package files and workspace configuration
-COPY ../../package*.json ./
-COPY ../../turbo.json ./
-COPY ../../tsconfig.json ./
+COPY package*.json ./
+COPY turbo.json ./
+COPY tsconfig.json ./
 
 # Copy ALL packages and apps (needed for workspace to work properly)
-COPY ../../packages ./packages
-COPY ../../apps ./apps
+COPY packages ./packages
+COPY apps ./apps
 
 # Install all dependencies with npm workspaces
 # This will install dependencies for ALL packages in the monorepo

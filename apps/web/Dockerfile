@@ -2,9 +2,9 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy package files first for better caching
-COPY ../../package*.json ./
-COPY ../../turbo.json ./
-COPY ../../tsconfig.json ./
+COPY package*.json ./
+COPY turbo.json ./
+COPY tsconfig.json ./
 COPY apps/web/package.json ./apps/web/package.json
 
 # Install dependencies with retries and better npm config
@@ -13,7 +13,7 @@ RUN npm config set fetch-retry-maxtimeout 120000 && \
     npm install --legacy-peer-deps || npm install --legacy-peer-deps
 
 # Copy source code
-COPY ../../packages ./packages
+COPY packages ./packages
 COPY apps/web/next.config.js ./apps/web/next.config.js
 COPY apps/web/tsconfig.json ./apps/web/tsconfig.json
 COPY apps/web/eslint.config.js ./apps/web/eslint.config.js
