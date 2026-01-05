@@ -1026,7 +1026,7 @@ export default function WorkflowBuilderPage() {
                 <div className="space-y-2">
                   {Array.isArray(availableTriggers) &&
                     (availableTriggers as any[])
-                      .filter((trigger: any) => trigger.name !== "Webhook Trigger")
+                      .filter((trigger: any) => trigger.name !== "Webhook Trigger" && trigger.name !== "Telegram Bot Trigger")
                       .map((trigger: any) => (
                       <div
                         key={trigger.id}
@@ -1052,7 +1052,7 @@ export default function WorkflowBuilderPage() {
                 <h3 className="px-4 py-3 text-xs uppercase tracking-wide text-white/60">Actions</h3>
                 <div className="space-y-2">
                   {Array.isArray(availableActions) &&
-                    (availableActions as any[]).filter(a => !['http_request','db_write'].includes(a.name)).map((action: any) => (
+                    (availableActions as any[]).filter(a => !['http_request','db_write','send_email'].includes(a.name)).map((action: any) => (
                       <div
                         key={action.id}
                         draggable
@@ -1125,7 +1125,7 @@ export default function WorkflowBuilderPage() {
                   }));
                 }}
               />
-            ) : meta[selectedNodeId]?.name === "send_email" || meta[selectedNodeId]?.name === "send_email_nodemailer" ? (
+            ) : meta[selectedNodeId]?.name === "send_email_nodemailer" ? (
               <SendEmailActionConfig
                 config={meta[selectedNodeId]?.config || {}}
                 onConfigChange={(newConfig) => {

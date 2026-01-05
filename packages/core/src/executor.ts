@@ -1,6 +1,5 @@
 import { PrismaClient } from '../../db/generated/prisma/index.js';
 const prisma = new PrismaClient();
-import { sendEmail } from './actions/sendEmail.js';
 
 // Inline Nodemailer implementation to avoid module issues
 async function sendEmailNodemailer({ to, subject, body }: { to: string; subject: string; body: string; }) {
@@ -45,9 +44,9 @@ async function sendEmailNodemailer({ to, subject, body }: { to: string; subject:
 }
 
 // removed http_request mapping - 30 September 2025
+// removed send_email - 5 January 2026
 // Map AvailableAction.name -> implementation
 const actionImpl: Record<string, (cfg: any, input: any) => Promise<any>> = {
-  send_email: sendEmail,
   send_email_nodemailer: sendEmailNodemailer,
 };
 

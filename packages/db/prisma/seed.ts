@@ -28,21 +28,11 @@ async function main() {
   });
 
   // removed http_request from seeds - 30 September 2025
-
-  // Create AvailableAction for Send Email
-  const sendEmailAction = await prisma.availableAction.upsert({
-    where: { name: 'send_email' },
-    update: {},
-    create: {
-      name: 'send_email',
-      description: 'Send an email using Resend',
-    },
-  });
+  // removed send_email from seeds - 5 January 2026
 
   console.log('Created trigger:', webhookTrigger);
   console.log('Created trigger:', formTrigger);
   console.log('Created trigger:', telegramTrigger);
-  console.log('Created action:', sendEmailAction);
 }
 
 main()
