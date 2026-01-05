@@ -246,13 +246,13 @@ function OnFormSubmissionTrigger({
       setPublished(data.published || false);
       
       // Update config with formId
+      // NOTE: formUrl is NOT saved - it's generated dynamically from formId
       updateConfig({ 
         formTitle, 
         formDescription, 
         formElements, 
         formId: data.id,
-        published: data.published || false,
-        formUrl: `${getApiUrl()}/api/v1/forms/${data.id}/submit`
+        published: data.published || false
       });
 
       alert("Form saved successfully!");
@@ -281,13 +281,13 @@ function OnFormSubmissionTrigger({
     };
     const updated = [...formElements, newElement];
     setFormElements(updated);
-    updateConfig({ formTitle, formDescription, formElements: updated, formId, formUrl });
+    updateConfig({ formTitle, formDescription, formElements: updated, formId });
   };
 
   const removeFormElement = (id: string) => {
     const updated = formElements.filter(el => el.id !== id);
     setFormElements(updated);
-    updateConfig({ formTitle, formDescription, formElements: updated, formId, formUrl });
+    updateConfig({ formTitle, formDescription, formElements: updated, formId });
   };
 
   const updateFormElement = (id: string, updates: Partial<FormElement>) => {
@@ -295,7 +295,7 @@ function OnFormSubmissionTrigger({
       el.id === id ? { ...el, ...updates } : el
     );
     setFormElements(updated);
-    updateConfig({ formTitle, formDescription, formElements: updated, formId, formUrl });
+    updateConfig({ formTitle, formDescription, formElements: updated, formId });
   };
 
   const updateConfig = (updates: any) => {
@@ -304,12 +304,12 @@ function OnFormSubmissionTrigger({
 
   const handleTitleChange = (value: string) => {
     setFormTitle(value);
-    updateConfig({ formTitle: value, formDescription, formElements, formId, formUrl });
+    updateConfig({ formTitle: value, formDescription, formElements, formId });
   };
 
   const handleDescriptionChange = (value: string) => {
     setFormDescription(value);
-    updateConfig({ formTitle, formDescription: value, formElements, formId, formUrl });
+    updateConfig({ formTitle, formDescription: value, formElements, formId });
   };
 
   if (isLoading) {
