@@ -1,6 +1,8 @@
 services:
   postgres:
     image: postgres:16-alpine
+    env_file:
+      - .env
     container_name: week2-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -18,6 +20,8 @@ services:
       retries: 5
 
   zookeeper:
+    env_file:
+      - .env
     image: confluentinc/cp-zookeeper:7.6.1
     container_name: week2-zookeeper
     environment:
@@ -37,6 +41,8 @@ services:
       start_period: 20s
 
   kafka:
+    env_file:
+      - .env
     image: confluentinc/cp-kafka:7.6.1
     container_name: week2-kafka
     depends_on:
@@ -66,6 +72,8 @@ services:
       start_period: 20s
 
   apis:
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: apps/apis/Dockerfile
@@ -101,6 +109,8 @@ services:
       start_period: 40s
 
   web:
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: apps/web/Dockerfile
@@ -125,6 +135,8 @@ services:
       start_period: 40s
 
   processor:
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: apps/processor/Dockerfile
@@ -146,6 +158,8 @@ services:
         condition: service_healthy
 
   workers:
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: apps/workers/Dockerfile
