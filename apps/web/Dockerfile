@@ -21,7 +21,6 @@ COPY packages ./packages
 COPY apps/web/next.config.js ./apps/web/next.config.js
 COPY apps/web/tsconfig.json ./apps/web/tsconfig.json
 COPY apps/web/eslint.config.js ./apps/web/eslint.config.js
-COPY apps/web/next-env.d.ts ./apps/web/next-env.d.ts
 COPY apps/web/tailwind.config.ts ./apps/web/tailwind.config.ts
 COPY apps/web/postcss.config.js ./apps/web/postcss.config.js
 COPY apps/web/postcss.config.mjs ./apps/web/postcss.config.mjs
