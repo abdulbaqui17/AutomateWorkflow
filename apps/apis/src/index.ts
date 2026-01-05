@@ -22,7 +22,7 @@ app.use("/api/v1", telegramRouter)
 
 app.get("/test", (req, res) => {
   res.json({ 
-    message: "✅ HOT RELOAD IS WORKING PERFECTLY! 🔥🚀",
+    message: "✅ HOT RELOAD IS WORKING PERFECTLY!",
     timestamp: new Date().toISOString(),
     containerized: true
   });
